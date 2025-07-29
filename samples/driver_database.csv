@@ -1,0 +1,11 @@
+Name,email,Phone,Street Address,City,ST,Zip,License #,Hire Date,Department,Emergency Contact
+"Smith, John",john.smith@company.com,555-123-4567,123 Main Street,New York,NY,10001,D123456789,2020-01-15,Sales,(555) 123-9999
+JANE DOE,jane.doe@company,5559876543,456 Oak Ave Apt 2B,Los Angeles,CA,90001,D987654321,01/20/2021,Marketing,555.987.1111
+"McDonald, Robert",r.mcdonald@company.com,(555) 456-7890,789 Pine St.,Chicago,IL,60601,D456789123,2021-06-01,IT,+1-555-456-0000
+"Johnson Jr., William",w.johnson@company.com,555.321.6547,321 Elm Street Suite 100,Houston,TX,77001,D321654987,06-15-2022,Operations,555-321-1111
+Maria Garcia-Lopez,mgarcia@company.com,+1 (555) 789-0123,654 Maple Dr,Phoenix,AZ,85001,D789012345,2022/03/01,Executive,(555)789-9999
+"O'Brien, Patrick",pobrien@company.com,555 234 5678,987 Cedar Blvd,Philadelphia,PA,19101,D234567890,2023-01-10,Field Service,555.234.0000
+"Thompson III, James",jthompson@company.com,5-5-5-3-4-5-6-7-8-9,159 Birch Lane,San Antonio,TX,78201,D345678901,01/15/23,Sales,555 345 1111
+"Lee, David",david.lee@company,555.456.7890,753 Spruce Way,San Diego,CA,92101,D567890123,2023-09-01,HR,555-456-2222
+TBD,pending@company.com,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Finance,TBD
+"Schmidt, Hans",h.schmidt@company.de,+49 30 12345678,Hauptstraße 123,Berlin,BE,10115,DE123456789,15.01.2023,International,+49 30 98765432
