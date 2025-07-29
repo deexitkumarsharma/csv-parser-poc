@@ -12,6 +12,7 @@ import { FileText, Map, CheckCircle, Eye, DollarSign } from 'lucide-react'
 function App() {
   const { currentJob, resetJob } = useParserStore()
   const [activeTab, setActiveTab] = useState('upload')
+  const isDemoMode = window.location.hostname.includes('github.io')
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -28,6 +29,7 @@ function App() {
               </h1>
               <p className="text-sm text-gray-600 mt-1">
                 Intelligent data parsing with AI assistance
+                {isDemoMode && ' (Demo Mode)'}
               </p>
             </div>
             {currentJob && (

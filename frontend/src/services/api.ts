@@ -1,7 +1,10 @@
 import axios from 'axios'
 import { ParseJob, FilePreview, ValidationResult, Metrics } from '@/types/parser'
+import { demoApi } from './demo-api'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+const IS_DEMO_MODE = import.meta.env.VITE_API_URL?.includes('demo') || 
+                     window.location.hostname.includes('github.io')
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,7 +13,8 @@ const api = axios.create({
   },
 })
 
-export const parserApi = {
+// Use demo API if running on GitHub Pages or in demo mode
+export const parserApi = IS_DEMO_MODE ? demoApi : {
   uploadFile: async (file: File, businessContext: string = 'general') => {
     const formData = new FormData()
     formData.append('file', file)

@@ -35,7 +35,8 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         env:
-          VITE_API_URL: https://api.csv-parser-demo.com
+          NODE_ENV: production
+          VITE_API_URL: https://csv-parser-backend-demo.herokuapp.com
         run: npm run build
 
       - name: Setup Pages
