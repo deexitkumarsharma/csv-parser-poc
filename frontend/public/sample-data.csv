@@ -1,0 +1,16 @@
+First Name,Last Name,Email Address,Phone Number,Street Address,City,State,ZIP Code,Company Name,Department
+JOHN,DOE,john.doe@gmial.com,555-123-4567,123 Main St,new york,NY,10001,ACME CORP,Engineering
+jane,smith,jane@yaho.com,(555) 987-6543,456 Oak Ave,Los Angeles,CA,90001,tech solutions,Marketing
+Bob,JOHNSON,bob@hotmial.com,555.456.7890,789 Pine St,chicago,IL,60601,Global Industries,Sales
+Alice,Williams,alice@gmai.com,555 321 9876,321 Elm St,HOUSTON,TX,77001,startup inc,Product
+CHARLIE,brown,charlie@outloo.com,5554567890,654 Maple Ave,Phoenix,AZ,85001,BROWN ENTERPRISES,Finance
+david,DAVIS,david@yaho.co,(555)654-3210,987 Cedar Blvd,philadelphia,PA,19101,Davis & Co,HR
+Eva,Martinez,eva@hotmai.com,555-789-0123,147 Birch Ln,San Antonio,TX,78201,Martinez LLC,Legal
+FRANK,Wilson,frank@gmal.com,555.890.1234,258 Spruce Way,san diego,CA,92101,wilson tech,IT
+grace,TAYLOR,grace@outlok.com,(555) 901-2345,369 Ash Dr,Dallas,TX,75201,TAYLOR GROUP,Operations
+Henry,Anderson,henry@yahooo.com,555 012 3456,741 Walnut St,san jose,CA,95101,Anderson Solutions,R&D
+Sarah,Thomas,sarah@,invalid-phone,852 Cherry Ln,Boston,MA,02101,Thomas Corp,
+Michael,Jackson,,555-234-5678,963 Peach St,Seattle,WA,98101,MJ Industries,Music
+Emily,Davis,emily.davis@gmail.com,+1-555-345-6789,159 Apple Way,Denver,CO,80201,Davis Tech,Engineering
+Robert,Miller,robert@miller.com,555123,753 Orange Ave,Portland,OR,97201,Miller & Associates,Consulting
+Lisa,Garcia,lisa.garcia@hotmail.com,555-456-7890,951 Grape St,Miami,FL,33101,Garcia Group,Design

@@ -47,24 +47,8 @@ export function MappingInterface({ onComplete }: MappingInterfaceProps) {
     queryKey: ['preview', currentJob?.job_id],
     queryFn: async () => {
       if (!currentJob?.file_name) return null
-      // This would normally fetch from the API, but for now we'll use mock data
-      return {
-        headers: ['First Name', 'Last Name', 'Email Address', 'Phone Number', 'Street Address', 'City', 'State', 'ZIP', 'Company Name', 'Dept'],
-        data: [
-          {
-            'First Name': 'John',
-            'Last Name': 'Doe',
-            'Email Address': 'john.doe@example.com',
-            'Phone Number': '555-123-4567',
-            'Street Address': '123 Main St',
-            'City': 'New York',
-            'State': 'NY',
-            'ZIP': '10001',
-            'Company Name': 'Acme Corp',
-            'Dept': 'Engineering'
-          }
-        ]
-      }
+      // Fetch actual file preview
+      return parserApi.previewFile(new File([], currentJob.file_name))
     },
     enabled: !!currentJob,
   })

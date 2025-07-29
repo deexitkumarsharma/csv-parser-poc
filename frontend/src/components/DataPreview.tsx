@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Download, FileText, FileSpreadsheet, FileJson, Eye, EyeOff, Sparkles, TrendingUp, Award, GitCompare, Search, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { useParserStore } from '@/stores/parserStore'
 import { cn } from '@/utils/cn'
 
 export function DataPreview() {
-  const { currentJob } = useParserStore()
+  const { currentJob, mappings } = useParserStore()
   const [viewMode, setViewMode] = useState<'original' | 'cleaned' | 'diff'>('cleaned')
   const [exportFormat, setExportFormat] = useState<'csv' | 'xlsx' | 'json'>('csv')
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,49 +20,39 @@ export function DataPreview() {
   const [exportProgress, setExportProgress] = useState(0)
   const rowsPerPage = 10
 
-  // Mock data for demo with more realistic examples
-  const mockOriginalData = [
-    { first_name: 'JOHN', last_name: 'DOE', email: 'john.doe@gmial.com', phone: '555-123-4567', city: 'new york', company: 'ACME CORP' },
-    { first_name: 'jane', last_name: 'smith', email: 'jane@yaho.com', phone: '(555) 987-6543', city: 'Los Angeles', company: 'tech solutions' },
-    { first_name: 'Bob', last_name: 'JOHNSON', email: 'bob@hotmial.com', phone: '555.456.7890', city: 'chicago', company: 'Global Industries' },
-    { first_name: 'Alice', last_name: 'Williams', email: 'alice@gmai.com', phone: '555 321 9876', city: 'HOUSTON', company: 'startup inc' },
-    { first_name: 'CHARLIE', last_name: 'brown', email: 'charlie@outloo.com', phone: '5554567890', city: 'Phoenix', company: 'BROWN ENTERPRISES' },
-    { first_name: 'david', last_name: 'DAVIS', email: 'david@yaho.co', phone: '(555)654-3210', city: 'philadelphia', company: 'Davis & Co' },
-    { first_name: 'Eva', last_name: 'Martinez', email: 'eva@hotmai.com', phone: '555-789-0123', city: 'San Antonio', company: 'Martinez LLC' },
-    { first_name: 'FRANK', last_name: 'Wilson', email: 'frank@gmal.com', phone: '555.890.1234', city: 'san diego', company: 'wilson tech' },
-    { first_name: 'grace', last_name: 'TAYLOR', email: 'grace@outlok.com', phone: '(555) 901-2345', city: 'Dallas', company: 'TAYLOR GROUP' },
-    { first_name: 'Henry', last_name: 'Anderson', email: 'henry@yahooo.com', phone: '555 012 3456', city: 'san jose', company: 'Anderson Solutions' },
-  ]
+  // Fetch original data
+  const { data: originalData } = useQuery({
+    queryKey: ['original-data', currentJob?.job_id],
+    queryFn: async () => {
+      if (!currentJob) return []
+      const preview = await parserApi.previewFile(new File([], currentJob.file_name || ''), 1000)
+      return preview.data
+    },
+    enabled: !!currentJob,
+  })
 
-  const mockCleanedData = [
-    { first_name: 'John', last_name: 'Doe', email: 'john.doe@gmail.com', phone: '+1-555-123-4567', city: 'New York', company: 'Acme Corp' },
-    { first_name: 'Jane', last_name: 'Smith', email: 'jane@yahoo.com', phone: '+1-555-987-6543', city: 'Los Angeles', company: 'Tech Solutions' },
-    { first_name: 'Bob', last_name: 'Johnson', email: 'bob@hotmail.com', phone: '+1-555-456-7890', city: 'Chicago', company: 'Global Industries' },
-    { first_name: 'Alice', last_name: 'Williams', email: 'alice@gmail.com', phone: '+1-555-321-9876', city: 'Houston', company: 'Startup Inc' },
-    { first_name: 'Charlie', last_name: 'Brown', email: 'charlie@outlook.com', phone: '+1-555-456-7890', city: 'Phoenix', company: 'Brown Enterprises' },
-    { first_name: 'David', last_name: 'Davis', email: 'david@yahoo.com', phone: '+1-555-654-3210', city: 'Philadelphia', company: 'Davis & Co' },
-    { first_name: 'Eva', last_name: 'Martinez', email: 'eva@hotmail.com', phone: '+1-555-789-0123', city: 'San Antonio', company: 'Martinez LLC' },
-    { first_name: 'Frank', last_name: 'Wilson', email: 'frank@gmail.com', phone: '+1-555-890-1234', city: 'San Diego', company: 'Wilson Tech' },
-    { first_name: 'Grace', last_name: 'Taylor', email: 'grace@outlook.com', phone: '+1-555-901-2345', city: 'Dallas', company: 'Taylor Group' },
-    { first_name: 'Henry', last_name: 'Anderson', email: 'henry@yahoo.com', phone: '+1-555-012-3456', city: 'San Jose', company: 'Anderson Solutions' },
-  ]
+  // Fetch cleaned data
+  const { data: cleanedDataResult } = useQuery({
+    queryKey: ['cleaned-data', currentJob?.job_id, mappings],
+    queryFn: async () => {
+      if (!currentJob || Object.keys(mappings).length === 0) return null
+      return parserApi.cleanData(currentJob.job_id, [], mappings as any)
+    },
+    enabled: !!currentJob && Object.keys(mappings).length > 0,
+  })
+
+  const cleanedData = cleanedDataResult?.data || []
 
   // Calculate changes
   const calculateChanges = () => {
-    let changes = 0
-    mockOriginalData.forEach((original, idx) => {
-      const cleaned = mockCleanedData[idx]
-      Object.keys(original).forEach(key => {
-        if ((original as any)[key] !== (cleaned as any)[key]) changes++
-      })
-    })
-    return changes
+    return cleanedDataResult?.total_changes || 0
   }
 
   // Filter data based on search
-  const filteredData = mockCleanedData.filter(row =>
+  const dataToFilter = viewMode === 'original' ? (originalData || []) : cleanedData
+  const filteredData = dataToFilter.filter((row: any) =>
     Object.values(row).some(value =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
     )
   )
 
@@ -93,7 +83,7 @@ export function DataPreview() {
       await new Promise(resolve => setTimeout(resolve, 2500))
       
       // Generate download based on format
-      const data = mockCleanedData
+      const data = cleanedData.length > 0 ? cleanedData : (originalData || [])
       let blob: Blob
       let filename: string
 
@@ -105,7 +95,7 @@ export function DataPreview() {
         case 'csv':
           const csv = [
             Object.keys(data[0]).join(','),
-            ...data.map(row => Object.values(row).join(','))
+            ...data.map((row: any) => Object.values(row).join(','))
           ].join('\n')
           blob = new Blob([csv], { type: 'text/csv' })
           filename = 'export.csv'
@@ -118,16 +108,51 @@ export function DataPreview() {
 
       return { blob, filename }
     },
-    onSuccess: ({ blob, filename }) => {
-      // Create download link
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+    onSuccess: (result) => {
+      // Handle the result based on whether it's from demo API or real export
+      if ('blob' in result) {
+        // Direct blob download
+        const url = URL.createObjectURL(result.blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = result.filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else if (result && 'data' in result) {
+        // Convert data to blob
+        let blob: Blob
+        let filename: string
+        
+        switch (exportFormat) {
+          case 'json':
+            blob = new Blob([JSON.stringify((result as any).data, null, 2)], { type: 'application/json' })
+            filename = (result as any).filename || 'export.json'
+            break
+          case 'csv':
+            const csv = [
+              Object.keys((result as any).data[0]).join(','),
+              ...(result as any).data.map((row: any) => Object.values(row).join(','))
+            ].join('\n')
+            blob = new Blob([csv], { type: 'text/csv' })
+            filename = (result as any).filename || 'export.csv'
+            break
+          default:
+            // For Excel, we'd normally use a library
+            blob = new Blob(['Excel export requires additional libraries'], { type: 'text/plain' })
+            filename = 'export.txt'
+        }
+        
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
       
       toast.success(`Successfully exported as ${exportFormat.toUpperCase()}!`)
       setShowExportModal(false)
@@ -176,7 +201,7 @@ export function DataPreview() {
   }
 
   const getDataToShow = () => {
-    if (viewMode === 'original') return paginatedData.map((_, idx) => mockOriginalData[(currentPage - 1) * rowsPerPage + idx])
+    if (viewMode === 'original') return paginatedData
     return paginatedData
   }
 
@@ -256,7 +281,7 @@ export function DataPreview() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Total Records</p>
-                <p className="text-2xl font-bold">{mockCleanedData.length}</p>
+                <p className="text-2xl font-bold">{originalData?.length || 0}</p>
                 <p className="text-xs text-gray-600 mt-1">Successfully processed</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full">
@@ -365,7 +390,7 @@ export function DataPreview() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {Object.keys(mockCleanedData[0]).map((key) => (
+                  {(cleanedData[0] ? Object.keys(cleanedData[0]) : originalData?.[0] ? Object.keys(originalData[0]) : []).map((key) => (
                     <th
                       key={key}
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -377,9 +402,9 @@ export function DataPreview() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {viewMode === 'diff' ? (
-                  paginatedData.map((cleanedRow, idx) => {
+                  paginatedData.map((cleanedRow: any, idx: number) => {
                     const originalIdx = (currentPage - 1) * rowsPerPage + idx
-                    const originalRow = mockOriginalData[originalIdx]
+                    const originalRow = originalData?.[originalIdx] || {}
                     return (
                       <tr key={idx} className="hover:bg-gray-50 transition-colors">
                         {Object.keys(cleanedRow).map((key) => (
@@ -391,11 +416,11 @@ export function DataPreview() {
                     )
                   })
                 ) : (
-                  dataToShow.map((row, idx) => (
+                  dataToShow.map((row: any, idx: number) => (
                     <tr key={idx} className="hover:bg-gray-50 transition-colors">
                       {Object.entries(row).map(([key, value]) => (
                         <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {value}
+                          {value as React.ReactNode}
                         </td>
                       ))}
                     </tr>

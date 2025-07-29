@@ -8,6 +8,7 @@ import { useParserStore } from '@/stores/parserStore'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, Map, CheckCircle, Eye, DollarSign } from 'lucide-react'
+import { parserApi } from '@/services/api'
 
 function App() {
   const { currentJob, resetJob } = useParserStore()
@@ -35,7 +36,14 @@ function App() {
             {currentJob && (
               <Button
                 variant="outline"
-                onClick={resetJob}
+                onClick={() => {
+                  // Reset demo API data
+                  if ('resetData' in parserApi) {
+                    (parserApi as any).resetData()
+                  }
+                  resetJob()
+                  setActiveTab('upload')
+                }}
                 className="text-sm"
               >
                 Start New Import

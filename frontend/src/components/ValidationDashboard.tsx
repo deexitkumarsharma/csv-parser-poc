@@ -34,19 +34,8 @@ export function ValidationDashboard({ onComplete }: ValidationDashboardProps) {
 
   const validateMutation = useMutation({
     mutationFn: async () => {
-      // Mock data for demo
-      const mockData = Array(100).fill(null).map((_, i) => ({
-        first_name: `User${i}`,
-        last_name: `Test${i}`,
-        email: i % 10 === 0 ? 'invalid-email' : `user${i}@example.com`,
-        phone: i % 15 === 0 ? '123' : '555-123-4567',
-        address: i % 20 === 0 ? '' : `${i} Main St`,
-        city: 'New York',
-        state: i % 25 === 0 ? 'Invalid' : 'NY',
-        zip_code: i % 30 === 0 ? '123' : '10001',
-      }))
-      
-      return parserApi.validateData(currentJob!.job_id, mockData)
+      // Use empty array to trigger validation of actual uploaded data
+      return parserApi.validateData(currentJob!.job_id, [])
     },
     onSuccess: (data) => {
       setValidationResults(data)
