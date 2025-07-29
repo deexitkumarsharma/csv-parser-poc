@@ -29,31 +29,57 @@ A production-ready CSV/Excel parser that leverages Google's Gemini AI for intell
 ## Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
-- Gemini API Key
+- Node.js 18+ and npm
+- Python 3.11+
+- Gemini API Key (provided: `AIzaSyAu87G3Fde8a-93aErdDJlhE2QtbCiFTKM`)
+- Docker Desktop (optional, for containerized setup)
 
-### Setup
+### Option 1: Local Development Setup (Recommended)
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/csv-parser-poc.git
+git clone https://github.com/deexitkumarsharma/csv-parser-poc.git
 cd csv-parser-poc
 ```
 
-2. Copy environment variables:
+2. Set up environment variables:
 ```bash
+# The .env file is already created with the Gemini API key
+# If you need to recreate it:
 cp .env.example .env
-# Edit .env with your Gemini API key and other settings
 ```
 
-3. Start with Docker Compose:
+3. **Start the Backend:**
 ```bash
-docker-compose up -d
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-4. Access the application:
+4. **Start the Frontend** (in a new terminal):
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+5. Access the application:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+
+### Option 2: Docker Setup (Requires Docker Desktop)
+
+1. Make sure Docker Desktop is running
+
+2. Start with Docker Compose:
+```bash
+docker compose up -d  # Note: Use 'docker compose' not 'docker-compose'
+```
+
+3. Access the application:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
 - API Documentation: http://localhost:8000/docs

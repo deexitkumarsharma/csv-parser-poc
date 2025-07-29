@@ -2,44 +2,64 @@
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- Gemini API Key (using the provided key for testing)
+- Node.js 18+ and npm
+- Python 3.11+
+- Gemini API Key (already configured: `AIzaSyAu87G3Fde8a-93aErdDJlhE2QtbCiFTKM`)
 
 ## Setup Instructions
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/csv-parser-poc.git
+git clone https://github.com/deexitkumarsharma/csv-parser-poc.git
 cd csv-parser-poc
 ```
 
-### 2. Set Up Environment Variables
+### 2. Environment Variables
+
+The `.env` file is already created with the Gemini API key. If you need to recreate it:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and add your Gemini API key:
-```
-GEMINI_API_KEY=AIzaSyAu87G3Fde8a-93aErdDJlhE2QtbCiFTKM
+### 3. Start the Application Locally
+
+#### Terminal 1 - Backend:
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-### 3. Start with Docker Compose
+#### Terminal 2 - Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+
+## Alternative: Docker Setup
+
+If you have Docker Desktop installed:
 
 ```bash
-docker-compose up -d
+docker compose up -d  # Note: Use 'docker compose' (with space) not 'docker-compose'
 ```
 
 This will start:
 - Backend API on http://localhost:8000
 - Frontend on http://localhost:3000
-- Redis cache
-- PostgreSQL database
-
-### 4. Access the Application
-
-Open http://localhost:3000 in your browser.
+- Redis cache (optional - app works without it)
+- PostgreSQL database (optional - app works without it)
 
 ## Development Setup
 
