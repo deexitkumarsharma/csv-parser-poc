@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { parserApi } from '@/services/api'
 import { useParserStore } from '@/stores/parserStore'
 import { ValidationError } from '@/types/parser'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface ValidationDashboardProps {
   onComplete?: () => void

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { parserApi } from '@/services/api'
 import { useParserStore } from '@/stores/parserStore'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface FileUploadProps {
   onUploadComplete?: () => void

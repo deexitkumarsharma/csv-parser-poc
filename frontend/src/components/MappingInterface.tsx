@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { parserApi } from '@/services/api'
 import { useParserStore } from '@/stores/parserStore'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 interface MappingInterfaceProps {
   onComplete?: () => void
