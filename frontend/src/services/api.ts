@@ -96,4 +96,60 @@ export const parserApi = IS_DEMO_MODE ? demoApi : {
     const response = await api.get<Metrics>(`/parse/metrics/${jobId}`)
     return response.data
   },
+
+  getExcelSheets: async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await api.post('/parse/excel/sheets', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    
+    return response.data
+  },
+
+  previewExcelSheet: async (file: File, sheetName: string, rows: number = 20) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await api.post('/parse/excel/preview-sheet', formData, {
+      params: { sheet_name: sheetName, rows },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    
+    return response.data
+  },
+
+  extractJsonFromExcel: async (
+    file: File,
+    sheetName: string,
+    options: {
+      headerRow?: number
+      startRow?: number
+      endRow?: number
+      columns?: string[]
+    } = {}
+  ) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const params: any = { sheet_name: sheetName }
+    if (options.headerRow !== undefined) params.header_row = options.headerRow
+    if (options.startRow !== undefined) params.start_row = options.startRow
+    if (options.endRow !== undefined) params.end_row = options.endRow
+    if (options.columns) params.columns = options.columns
+    
+    const response = await api.post('/parse/excel/extract-json', formData, {
+      params,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    
+    return response.data
+  },
 }

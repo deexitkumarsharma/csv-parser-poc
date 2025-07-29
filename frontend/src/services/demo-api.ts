@@ -464,5 +464,109 @@ export const demoApi = {
     }
 
     return parsedData
+  },
+
+  // New Excel-specific endpoints
+  getExcelSheets: async (file: File) => {
+    await delay(500)
+    
+    // For demo, return mock sheets
+    const sheets = [
+      { index: 0, name: 'Sheet1', rows: 1000, columns: 15, non_empty_rows: 850, hidden: false },
+      { index: 1, name: 'Data', rows: 500, columns: 10, non_empty_rows: 450, hidden: false },
+      { index: 2, name: 'Summary', rows: 100, columns: 5, non_empty_rows: 80, hidden: false },
+      { index: 3, name: 'Hidden Sheet', rows: 50, columns: 3, non_empty_rows: 20, hidden: true }
+    ]
+    
+    return { sheets }
+  },
+
+  previewExcelSheet: async (file: File, sheetName: string, rows: number = 20) => {
+    await delay(500)
+    
+    // Generate mock data based on sheet name
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Department', 'Role', 'Start Date']
+    const mockData: any[] = []
+    
+    for (let i = 0; i < rows; i++) {
+      mockData.push({
+        ID: `EMP${String(i + 1).padStart(4, '0')}`,
+        Name: `Employee ${i + 1}`,
+        Email: `employee${i + 1}@company.com`,
+        Phone: `+1-555-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+        Company: 'Demo Corp',
+        Department: ['Sales', 'Engineering', 'Marketing', 'HR'][i % 4],
+        Role: ['Manager', 'Developer', 'Analyst', 'Specialist'][i % 4],
+        'Start Date': new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0]
+      })
+    }
+    
+    const columnsInfo = headers.map(header => ({
+      name: header,
+      type: header === 'ID' ? 'string' : header === 'Start Date' ? 'date' : 'string',
+      non_null_count: rows,
+      unique_count: header === 'ID' ? rows : Math.floor(rows * 0.7),
+      sample_values: mockData.slice(0, 5).map(row => row[header])
+    }))
+    
+    return {
+      headers,
+      data: mockData,
+      columns_info: columnsInfo,
+      total_rows: rows,
+      sheet_name: sheetName
+    }
+  },
+
+  extractJsonFromExcel: async (
+    file: File,
+    sheetName: string,
+    options: {
+      headerRow?: number
+      startRow?: number
+      endRow?: number
+      columns?: string[]
+    } = {}
+  ) => {
+    await delay(1000)
+    
+    // Generate mock data
+    const allHeaders = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Department', 'Role', 'Start Date', 'Salary', 'Status']
+    const headers = options.columns || allHeaders
+    const startRow = options.startRow || 1
+    const endRow = options.endRow || 100
+    const totalRows = endRow - startRow
+    
+    const data: any[] = []
+    for (let i = startRow; i < endRow; i++) {
+      const row: any = {}
+      headers.forEach(header => {
+        if (header === 'ID') row[header] = `EMP${String(i).padStart(4, '0')}`
+        else if (header === 'Name') row[header] = `Employee ${i}`
+        else if (header === 'Email') row[header] = `employee${i}@company.com`
+        else if (header === 'Phone') row[header] = `+1-555-${String(Math.floor(Math.random() * 9000) + 1000)}`
+        else if (header === 'Company') row[header] = 'Demo Corp'
+        else if (header === 'Department') row[header] = ['Sales', 'Engineering', 'Marketing', 'HR'][i % 4]
+        else if (header === 'Role') row[header] = ['Manager', 'Developer', 'Analyst', 'Specialist'][i % 4]
+        else if (header === 'Start Date') row[header] = new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0]
+        else if (header === 'Salary') row[header] = 50000 + Math.floor(Math.random() * 100000)
+        else if (header === 'Status') row[header] = Math.random() > 0.2 ? 'Active' : 'Inactive'
+      })
+      data.push(row)
+    }
+    
+    return {
+      sheet_name: sheetName,
+      total_rows: data.length,
+      headers,
+      data,
+      metadata: {
+        header_row: options.headerRow || 0,
+        data_start_row: startRow,
+        data_end_row: endRow,
+        sheet_dimensions: { rows: 1000, columns: 10 },
+        merged_cells_count: 0
+      }
+    }
   }
 }

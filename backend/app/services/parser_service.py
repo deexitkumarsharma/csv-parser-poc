@@ -1,7 +1,7 @@
 import json
 import asyncio
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 import pandas as pd
 from fastapi import WebSocket
@@ -145,17 +145,25 @@ class ParserService:
         self,
         file_contents: bytes,
         filename: str,
-        rows: int = 10
+        rows: int = 10,
+        sheet_name: Optional[Union[str, int]] = None
     ) -> Dict[str, Any]:
-        df = await self.file_handler.read_file_contents(file_contents, filename)
+        file_extension = filename.split(".")[-1].lower()
         
-        return {
-            "headers": df.columns.tolist(),
-            "data": df.head(rows).to_dict(orient="records"),
-            "total_rows": len(df),
-            "file_type": filename.split(".")[-1].lower(),
-            "encoding": "utf-8"  # Can be detected if needed
-        }
+        if file_extension in ["xlsx", "xls"] and sheet_name is not None:
+            # Preview specific Excel sheet
+            return await self.file_handler.preview_excel_sheet(file_contents, sheet_name, rows)
+        else:
+            # Regular file preview
+            df = await self.file_handler.read_file_contents(file_contents, filename)
+            
+            return {
+                "headers": df.columns.tolist(),
+                "data": df.head(rows).to_dict(orient="records"),
+                "total_rows": len(df),
+                "file_type": file_extension,
+                "encoding": "utf-8"  # Can be detected if needed
+            }
     
     async def suggest_mappings(
         self,
@@ -368,3 +376,105 @@ class ParserService:
         }
         
         return messages.get(status, "Unknown status")
+    
+    async def get_excel_sheets_info(self, file_contents: bytes, filename: str) -> List[Dict[str, Any]]:
+        """Get information about all sheets in an Excel file"""
+        return await self.file_handler.get_excel_sheets(file_contents)
+    
+    async def preview_excel_sheet(
+        self,
+        file_contents: bytes,
+        filename: str,
+        sheet_name: Union[str, int],
+        rows: int = 20
+    ) -> Dict[str, Any]:
+        """Preview a specific Excel sheet"""
+        return await self.file_handler.preview_excel_sheet(file_contents, sheet_name, rows)
+    
+    async def extract_json_from_excel(
+        self,
+        contents: bytes,
+        filename: str,
+        sheet_name: Union[str, int],
+        header_row: int = 0,
+        start_row: Optional[int] = None,
+        end_row: Optional[int] = None,
+        columns: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """Extract JSON data from Excel with flexible options"""
+        try:
+            # Read the Excel file with structure
+            structured_data = await self.file_handler.read_excel_with_structure(contents, sheet_name)
+            
+            # Extract the raw data
+            raw_data = structured_data["raw_data"]
+            
+            # Determine the actual header row
+            if header_row >= len(raw_data):
+                raise ValueError(f"Header row {header_row} is out of range")
+            
+            # Get headers from the specified row
+            header_cells = raw_data[header_row]
+            headers = []
+            for cell in header_cells:
+                if cell["value"] is not None:
+                    headers.append(str(cell["value"]).strip())
+                else:
+                    headers.append(f"Column_{cell['column']}")
+            
+            # Determine data range
+            data_start = start_row if start_row is not None else header_row + 1
+            data_end = end_row if end_row is not None else len(raw_data)
+            
+            # Extract data rows
+            extracted_data = []
+            for row_idx in range(data_start, min(data_end, len(raw_data))):
+                row = raw_data[row_idx]
+                row_data = {}
+                
+                # Check if row has any data
+                has_data = any(cell["value"] is not None for cell in row)
+                if not has_data:
+                    continue
+                
+                for col_idx, cell in enumerate(row):
+                    if col_idx < len(headers):
+                        header = headers[col_idx]
+                        
+                        # Filter by columns if specified
+                        if columns and header not in columns:
+                            continue
+                        
+                        # Handle different data types
+                        value = cell["value"]
+                        if value is not None:
+                            # Convert datetime objects to string
+                            if hasattr(value, 'isoformat'):
+                                value = value.isoformat()
+                            row_data[header] = value
+                        else:
+                            row_data[header] = None
+                
+                if row_data:  # Only add non-empty rows
+                    extracted_data.append(row_data)
+            
+            # Prepare response
+            response = {
+                "sheet_name": structured_data["sheet_name"],
+                "total_rows": len(extracted_data),
+                "headers": headers if not columns else [h for h in headers if h in columns],
+                "data": extracted_data,
+                "metadata": {
+                    "header_row": header_row,
+                    "data_start_row": data_start,
+                    "data_end_row": data_end,
+                    "sheet_dimensions": structured_data["dimensions"],
+                    "merged_cells_count": len(structured_data["merged_cells"])
+                }
+            }
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error extracting JSON from Excel: {e}")
+            raise

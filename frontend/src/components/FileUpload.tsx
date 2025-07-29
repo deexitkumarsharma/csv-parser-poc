@@ -13,9 +13,10 @@ import { cn } from '@/utils/cn'
 
 interface FileUploadProps {
   onUploadComplete?: () => void
+  onFileSelected?: (file: File) => void
 }
 
-export function FileUpload({ onUploadComplete }: FileUploadProps) {
+export function FileUpload({ onUploadComplete, onFileSelected }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [businessContext, setBusinessContext] = useState('general')
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -83,11 +84,17 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0])
+      const file = acceptedFiles[0]
+      setSelectedFile(file)
       setUploadProgress(0)
       setAiProgress(0)
+      
+      // Notify parent about file selection
+      if (onFileSelected) {
+        onFileSelected(file)
+      }
     }
-  }, [])
+  }, [onFileSelected])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -102,7 +109,17 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
 
   const handleUpload = () => {
     if (selectedFile) {
-      uploadMutation.mutate(selectedFile)
+      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase()
+      
+      // For Excel files in the new workflow, just trigger completion
+      if (onFileSelected && (fileExtension === 'xlsx' || fileExtension === 'xls')) {
+        if (onUploadComplete) {
+          onUploadComplete()
+        }
+      } else {
+        // Traditional upload flow
+        uploadMutation.mutate(selectedFile)
+      }
     }
   }
 
