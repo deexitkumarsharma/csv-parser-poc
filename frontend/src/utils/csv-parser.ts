@@ -1,4 +1,6 @@
 // Client-side CSV parser utility
+import * as XLSX from 'xlsx'
+
 export interface ParsedCSV {
   headers: string[]
   data: Record<string, string>[]
@@ -114,48 +116,77 @@ function parseCSVLine(line: string): string[] {
   return result
 }
 
-// Excel parsing would require a library like xlsx
+// Real Excel parsing using xlsx library
 export async function parseExcelFile(file: File, sheetIndex: number = 0): Promise<ParsedCSV> {
-  // For demo purposes, we'll simulate multiple sheets
-  // In production, you'd use a library like xlsx
-  
-  // Simulate parsing delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  // Mock multiple sheets for Excel files
-  const mockSheets: SheetInfo[] = [
-    { name: 'Sheet1', index: 0, rowCount: 50, columnCount: 10 },
-    { name: 'Customer Data', index: 1, rowCount: 100, columnCount: 8 },
-    { name: 'Sales Report', index: 2, rowCount: 75, columnCount: 12 }
-  ]
-  
-  // For demo, return mock data based on selected sheet
-  const selectedSheet = mockSheets[sheetIndex] || mockSheets[0]
-  
-  // Mock headers based on sheet
-  const headerSets = {
-    0: ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'State', 'ZIP', 'Company', 'Department'],
-    1: ['Customer ID', 'Full Name', 'Email Address', 'Phone Number', 'Registration Date', 'Status', 'Total Orders', 'Last Order'],
-    2: ['Product ID', 'Product Name', 'Category', 'Price', 'Quantity Sold', 'Revenue', 'Date', 'Region', 'Sales Rep', 'Customer', 'Notes', 'Status']
-  }
-  
-  const headers = headerSets[sheetIndex as keyof typeof headerSets] || headerSets[0]
-  
-  // Generate mock data
-  const data: Record<string, string>[] = []
-  for (let i = 0; i < 10; i++) {
-    const row: Record<string, string> = {}
-    headers.forEach((header, idx) => {
-      row[header] = `Sample ${i + 1}-${idx + 1}`
-    })
-    data.push(row)
-  }
-  
-  return {
-    headers,
-    data,
-    totalRows: selectedSheet.rowCount,
-    sheets: mockSheets,
-    currentSheet: selectedSheet.name
-  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result
+        const workbook = XLSX.read(data, { type: 'binary' })
+        
+        // Get sheet information
+        const sheets: SheetInfo[] = workbook.SheetNames.map((name: string, index: number) => {
+          const worksheet = workbook.Sheets[name]
+          const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
+          const rowCount = range.e.r - range.s.r + 1
+          const columnCount = range.e.c - range.s.c + 1
+          
+          return {
+            name,
+            index,
+            rowCount,
+            columnCount
+          }
+        })
+        
+        // Parse the selected sheet
+        const selectedSheetName = workbook.SheetNames[sheetIndex] || workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[selectedSheetName]
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+          header: 1, // Use array of arrays
+          defval: '' // Default value for empty cells
+        }) as any[][]
+        
+        if (jsonData.length === 0) {
+          throw new Error('Empty Excel file')
+        }
+        
+        // First row is headers
+        const headers = jsonData[0].map(h => String(h || '').trim()).filter(h => h !== '')
+        
+        // Parse data rows
+        const parsedData: Record<string, string>[] = []
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i]
+          if (row && row.length > 0) {
+            const rowData: Record<string, string> = {}
+            headers.forEach((header, index) => {
+              rowData[header] = String(row[index] || '').trim()
+            })
+            parsedData.push(rowData)
+          }
+        }
+        
+        resolve({
+          headers,
+          data: parsedData,
+          totalRows: parsedData.length,
+          sheets,
+          currentSheet: selectedSheetName
+        })
+      } catch (error) {
+        reject(error)
+      }
+    }
+    
+    reader.onerror = () => {
+      reject(new Error('Failed to read Excel file'))
+    }
+    
+    reader.readAsBinaryString(file)
+  })
 }

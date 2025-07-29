@@ -30,7 +30,10 @@
       "Bash(gh workflow list:*)",
       "Bash(gh run list:*)",
       "Bash(gh run watch:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }
