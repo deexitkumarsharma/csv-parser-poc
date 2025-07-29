@@ -44,7 +44,7 @@ export function ExcelSheetSelector({ file, onExtractComplete, onCancel }: ExcelS
     onSuccess: (data) => {
       setSheets(data)
       // Auto-select first non-hidden sheet
-      const firstSheet = data.find(s => !s.hidden) || data[0]
+      const firstSheet = data.find((s: ExcelSheet) => !s.hidden) || data[0]
       if (firstSheet) {
         setSelectedSheet(firstSheet.name)
       }
