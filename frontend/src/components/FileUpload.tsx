@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useMutation } from '@tanstack/react-query'
-import { Upload, File, AlertCircle, CheckCircle, Sparkles, FileText, BarChart } from 'lucide-react'
+import { Upload, File, AlertCircle, CheckCircle, Sparkles, FileText, BarChart, FileSpreadsheet, ChevronDown } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -20,6 +20,9 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [businessContext, setBusinessContext] = useState('general')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [aiProgress, setAiProgress] = useState(0)
+  const [sheets, setSheets] = useState<any[]>([])
+  const [selectedSheet, setSelectedSheet] = useState(0)
+  const [showSheetSelector, setShowSheetSelector] = useState(false)
   const { setCurrentJob } = useParserStore()
 
   const uploadMutation = useMutation({
@@ -44,6 +47,18 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
     },
     onSuccess: (data) => {
       setCurrentJob(data)
+      
+      // Check if file has multiple sheets
+      if ('getSheets' in parserApi) {
+        const availableSheets = (parserApi as any).getSheets()
+        if (availableSheets && availableSheets.length > 1) {
+          setSheets(availableSheets)
+          setShowSheetSelector(true)
+          toast.success('File uploaded! Please select a sheet to import.')
+          return
+        }
+      }
+      
       toast.success('File uploaded successfully! AI is now analyzing...')
       
       // Start AI progress animation
@@ -94,8 +109,34 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
   const getFileIcon = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase()
     if (ext === 'csv') return <FileText className="h-8 w-8 text-green-500" />
-    if (ext === 'xlsx' || ext === 'xls') return <BarChart className="h-8 w-8 text-blue-500" />
+    if (ext === 'xlsx' || ext === 'xls') return <FileSpreadsheet className="h-8 w-8 text-blue-500" />
     return <File className="h-8 w-8 text-gray-400" />
+  }
+
+  const handleSheetSelection = async () => {
+    if (!('switchSheet' in parserApi)) return
+    
+    try {
+      await (parserApi as any).switchSheet(selectedSheet)
+      setShowSheetSelector(false)
+      toast.success(`Selected sheet: ${sheets[selectedSheet]?.name}`)
+      
+      // Continue with the upload process
+      const aiInterval = setInterval(() => {
+        setAiProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(aiInterval)
+            if (onUploadComplete) {
+              setTimeout(onUploadComplete, 500)
+            }
+            return 100
+          }
+          return prev + 5
+        })
+      }, 100)
+    } catch (error) {
+      toast.error('Failed to switch sheet')
+    }
   }
 
   return (
@@ -176,7 +217,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
               <span>CSV</span>
             </div>
             <div className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
+              <FileSpreadsheet className="h-4 w-4" />
               <span>Excel</span>
             </div>
           </div>
@@ -206,6 +247,62 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Upload & Analyze
+              </Button>
+            </div>
+          </div>
+        </AnimatedCard>
+      )}
+
+      {/* Sheet Selection */}
+      {showSheetSelector && sheets.length > 0 && (
+        <AnimatedCard delay={0}>
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Select Sheet to Import</h3>
+                <p className="text-sm text-gray-600">
+                  This file contains multiple sheets. Please select which one to import:
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                {sheets.map((sheet, index) => (
+                  <label
+                    key={index}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
+                      selectedSheet === index
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="sheet"
+                        value={index}
+                        checked={selectedSheet === index}
+                        onChange={() => setSelectedSheet(index)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-900">{sheet.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {sheet.rowCount} rows × {sheet.columnCount} columns
+                        </p>
+                      </div>
+                    </div>
+                    <FileSpreadsheet className="w-5 h-5 text-gray-400" />
+                  </label>
+                ))}
+              </div>
+              
+              <Button
+                onClick={handleSheetSelection}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Import Selected Sheet
               </Button>
             </div>
           </div>

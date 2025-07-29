@@ -25,7 +25,12 @@
       "Bash(find:*)",
       "Bash(curl:*)",
       "Bash(lsof:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(gh workflow view:*)",
+      "Bash(gh workflow list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }

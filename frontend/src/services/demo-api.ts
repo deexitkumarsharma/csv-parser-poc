@@ -10,6 +10,9 @@ let currentFileData: {
   data: Record<string, string>[]
   mappings: Record<string, any>
   cleanedData: Record<string, string>[]
+  sheets?: any[]
+  currentSheet?: string
+  originalFile?: File
 } | null = null
 
 export const demoApi = {
@@ -22,10 +25,10 @@ export const demoApi = {
       if (file.name.endsWith('.csv')) {
         parsedData = await parseCSVFile(file)
       } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        // For demo, we'll simulate Excel parsing
-        throw new Error('Excel files are not supported in demo mode. Please use CSV.')
+        // Use mock Excel parsing for demo
+        parsedData = await parseExcelFile(file)
       } else {
-        throw new Error('Unsupported file format')
+        throw new Error('Unsupported file format. Please use CSV or Excel files.')
       }
       
       // Store the parsed data
@@ -33,7 +36,10 @@ export const demoApi = {
         headers: parsedData.headers,
         data: parsedData.data,
         mappings: {},
-        cleanedData: []
+        cleanedData: [],
+        sheets: parsedData.sheets,
+        currentSheet: parsedData.currentSheet,
+        originalFile: file
       }
       
       return {
@@ -423,5 +429,40 @@ export const demoApi = {
   // Reset data for new import
   resetData: () => {
     currentFileData = null
+  },
+
+  // Get available sheets
+  getSheets: () => {
+    return currentFileData?.sheets || []
+  },
+
+  // Switch sheet
+  switchSheet: async (sheetIndex: number) => {
+    if (!currentFileData || !currentFileData.originalFile) {
+      throw new Error('No file loaded')
+    }
+
+    const file = currentFileData.originalFile
+    let parsedData
+    
+    if (file.name.endsWith('.csv')) {
+      // CSV files only have one sheet
+      parsedData = await parseCSVFile(file)
+    } else {
+      // Parse the selected sheet for Excel
+      parsedData = await parseExcelFile(file, sheetIndex)
+    }
+
+    // Update current data with new sheet
+    currentFileData = {
+      ...currentFileData,
+      headers: parsedData.headers,
+      data: parsedData.data,
+      currentSheet: parsedData.currentSheet,
+      mappings: {}, // Reset mappings for new sheet
+      cleanedData: [] // Reset cleaned data
+    }
+
+    return parsedData
   }
 }

@@ -55,6 +55,7 @@ export function MappingInterface({ onComplete }: MappingInterfaceProps) {
 
   useEffect(() => {
     if (preview) {
+      console.log('Preview data:', preview)
       setHeaders(preview.headers)
       setSampleData(preview.data)
     }
