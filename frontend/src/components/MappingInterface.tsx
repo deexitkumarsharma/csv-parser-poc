@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowRight, Sparkles, Check, X } from 'lucide-react'
+import { ArrowRight, Sparkles, Check } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { parserApi } from '@/services/api'

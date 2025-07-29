@@ -8,7 +8,7 @@ import { useParserStore } from '@/stores/parserStore'
 import { cn } from '@/utils/cn'
 
 export function DataPreview() {
-  const { currentJob, previewData } = useParserStore()
+  const { currentJob } = useParserStore()
   const [viewMode, setViewMode] = useState<'original' | 'cleaned' | 'diff'>('cleaned')
   const [exportFormat, setExportFormat] = useState<'csv' | 'xlsx' | 'json'>('csv')
 

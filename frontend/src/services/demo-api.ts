@@ -4,7 +4,7 @@ import { ParseJob, FilePreview, ValidationResult, Metrics, ParseStatus } from '@
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const demoApi = {
-  uploadFile: async (file: File, businessContext: string = 'general'): Promise<ParseJob> => {
+  uploadFile: async (file: File, _businessContext: string = 'general'): Promise<ParseJob> => {
     await delay(1000)
     return {
       job_id: 'demo-' + Date.now(),
@@ -31,7 +31,7 @@ export const demoApi = {
     }
   },
 
-  previewFile: async (file: File, rows: number = 10): Promise<FilePreview> => {
+  previewFile: async (_file: File, _rows: number = 10): Promise<FilePreview> => {
     await delay(800)
     return {
       headers: ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'State', 'ZIP'],
